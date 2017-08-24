@@ -71,7 +71,7 @@
 - (BOOL) isSystemUrl:(NSURL*)url
 {
 	if ([[url host] isEqualToString:@"itunes.apple.com"]) {
-		return YES;
+		//return YES;
 	}
 
 	return NO;
