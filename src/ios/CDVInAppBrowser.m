@@ -71,9 +71,9 @@
 - (BOOL) isSystemUrl:(NSURL*)url
 {
 	if ([[url host] isEqualToString:@"itunes.apple.com"]) {
-		//return YES;
+			return YES;
 	}
-
+	
 	return NO;
 }
 
@@ -441,6 +441,10 @@
         [pluginResult setKeepCallback:[NSNumber numberWithBool:YES]];
 
         [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
+		
+		if ([self isSystemUrl:url]) {
+			return NO;
+		}
     }
 
     return YES;
