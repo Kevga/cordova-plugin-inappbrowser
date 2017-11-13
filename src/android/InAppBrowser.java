@@ -928,19 +928,20 @@ public class InAppBrowser extends CordovaPlugin {
                 inAppWebView.requestFocus();
                 inAppWebView.requestFocusFromTouch();
 
-                // Add the back and forward buttons to our action button container layout
-                actionButtonContainer.addView(back);
-                actionButtonContainer.addView(forward);
+                // Add the views to our toolbar
+                toolbar.addView(actionButtonContainer);
+                toolbar.addView(close);
 
-                // Add the views to our toolbar if they haven't been disabled
-                if (!hideNavigationButtons) toolbar.addView(actionButtonContainer);
-                if (!hideUrlBar) toolbar.addView(edittext);
-
-                // Don't add the toolbar if its been disabled
                 if (getShowLocationBar()) {
-                    // Add our toolbar to our main view/layout
-                    main.addView(toolbar);
+					//Add location bar if enabled
+                    toolbar.addView(edittext);
+					// Add the back and forward buttons to our action button container layout
+					actionButtonContainer.addView(back);
+					actionButtonContainer.addView(forward);
                 }
+
+				// Add our toolbar to our main view/layout
+				main.addView(toolbar);
 
                 // Add our webview to our main view/layout
                 RelativeLayout webViewLayout = new RelativeLayout(cordova.getActivity());
