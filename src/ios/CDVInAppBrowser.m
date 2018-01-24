@@ -96,7 +96,7 @@
         NSURL* absoluteUrl = [[NSURL URLWithString:url relativeToURL:baseUrl] absoluteURL];
 
         if ([self isSystemUrl:absoluteUrl]) {
-            target = kInAppBrowserTargetSystem;
+            //target = kInAppBrowserTargetSystem;
         }
 
         if ([target isEqualToString:kInAppBrowserTargetSelf]) {
