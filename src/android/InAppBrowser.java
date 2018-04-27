@@ -939,6 +939,9 @@ public class InAppBrowser extends CordovaPlugin {
 					actionButtonContainer.addView(back);
 					actionButtonContainer.addView(forward);
                 }
+				
+				// Add our toolbar to our main view/layout
+				main.addView(toolbar);
 
 				// Add our toolbar to our main view/layout
 				main.addView(toolbar);
