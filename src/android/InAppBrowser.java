@@ -56,6 +56,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import android.webkit.*;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.Config;
 import org.apache.cordova.CordovaArgs;
@@ -134,6 +136,7 @@ public class InAppBrowser extends CordovaPlugin {
     private boolean showFooter = false;
     private String footerColor = "";
     private String[] allowedSchemes;
+    private String currentURL = "";
 
     /**
      * Executes the request and returns PluginResult.
@@ -960,6 +963,23 @@ public class InAppBrowser extends CordovaPlugin {
         return "";
     }
 
+    private void sendLoadStartEvent(String url){
+        if (url == this.currentURL){
+            return;
+        }
+
+        this.currentURL = url;
+
+        try {
+            JSONObject startObject = new JSONObject();
+            startObject.put("type", LOAD_START_EVENT);
+            startObject.put("url", url);
+            sendUpdate(startObject, true);
+        } catch (JSONException ex) {
+            LOG.e(LOG_TAG, "LoadStart event error");
+        }
+    }
+
     /**
      * Create a new plugin success result and send it back to JavaScript
      *
@@ -1050,6 +1070,8 @@ public class InAppBrowser extends CordovaPlugin {
          */
         @Override
         public boolean shouldOverrideUrlLoading(WebView webView, String url) {
+            sendLoadStartEvent(url);
+
             if (url.startsWith(WebView.SCHEME_TEL)) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_DIAL);
@@ -1059,7 +1081,7 @@ public class InAppBrowser extends CordovaPlugin {
                 } catch (android.content.ActivityNotFoundException e) {
                     LOG.e(LOG_TAG, "Error dialing " + url + ": " + e.toString());
                 }
-            } else if (url.startsWith("geo:") || url.startsWith(WebView.SCHEME_MAILTO) || url.startsWith("intent:")  || url.startsWith("whatsapp:")) {
+            } else if (url.startsWith("geo:") || url.startsWith(WebView.SCHEME_MAILTO) || url.startsWith("whatsapp:")) {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     intent.setData(Uri.parse(url));
@@ -1101,29 +1123,43 @@ public class InAppBrowser extends CordovaPlugin {
                 }
             }
             // Test for whitelisted custom scheme names like mycoolapp:// or twitteroauthresponse:// (Twitter Oauth Response)
-            else if (!url.startsWith("http:") && !url.startsWith("https:") && url.matches("^[a-z]*://.*?$")) {
-                if (allowedSchemes == null) {
-                    String allowed = preferences.getString("AllowedSchemes", "");
-                    allowedSchemes = allowed.split(",");
-                }
-                if (allowedSchemes != null) {
-                    for (String scheme : allowedSchemes) {
-                        if (url.startsWith(scheme)) {
-                            try {
-                                JSONObject obj = new JSONObject();
-                                obj.put("type", "customscheme");
-                                obj.put("url", url);
-                                sendUpdate(obj, true);
-                                return true;
-                            } catch (JSONException ex) {
-                                LOG.e(LOG_TAG, "Custom Scheme URI passed in has caused a JSON error.");
-                            }
-                        }
-                    }
-                }
+            else if (!url.startsWith("http:") && !url.startsWith("https:") && !url.startsWith("market:") && !url.startsWith("intent:") && url.matches("^[a-z]*://.*?$")) {
+                //sendLoadStartEvent(url);
+                /*try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(url));
+                    cordova.getActivity().startActivity(intent);
+                    return true;
+                } catch (android.content.ActivityNotFoundException e) {
+                    LOG.e(LOG_TAG, "Error with " + url + ": " + e.toString());
+                }*/
+            } else if (url.startsWith("market:") || url.startsWith("intent:")){
+                //JS decides what to do via loadstart event
+                //sendLoadStartEvent(url);
+                return true;
+            } else {
+                //sendLoadStartEvent(url);
             }
 
             return false;
+        }
+
+        @Override
+        public void onLoadResource(WebView view, String url) {
+            //LOG.e(LOG_TAG, "(onLoadResource): "+url);
+            super.onLoadResource(view, url);
+        }
+
+        @Override
+        public void onPageCommitVisible(WebView view, String url) {
+            //LOG.e(LOG_TAG, "(onPageCommitVisible): "+url);
+            super.onPageCommitVisible(view, url);
+        }
+
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+            //LOG.e(LOG_TAG, "(intercept): "+request.getUrl());
+            return super.shouldInterceptRequest(view, request);
         }
 
 
@@ -1136,21 +1172,14 @@ public class InAppBrowser extends CordovaPlugin {
          */
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            sendLoadStartEvent(url);
+
             super.onPageStarted(view, url, favicon);
             String newloc = url;
 
             // Update the UI if we haven't already
             if (!newloc.equals(edittext.getText().toString())) {
                 edittext.setText(newloc);
-            }
-
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("type", LOAD_START_EVENT);
-                obj.put("url", newloc);
-                sendUpdate(obj, true);
-            } catch (JSONException ex) {
-                LOG.e(LOG_TAG, "URI passed in has caused a JSON error.");
             }
         }
 
@@ -1174,7 +1203,7 @@ public class InAppBrowser extends CordovaPlugin {
                 JSONObject obj = new JSONObject();
                 obj.put("type", LOAD_STOP_EVENT);
                 obj.put("url", url);
-
+                //LOG.e(LOG_TAG, "(pageFinished) LoadStop event: "+url);
                 sendUpdate(obj, true);
             } catch (JSONException ex) {
                 LOG.d(LOG_TAG, "Should never happen");
@@ -1182,19 +1211,19 @@ public class InAppBrowser extends CordovaPlugin {
         }
 
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            super.onReceivedError(view, errorCode, description, failingUrl);
-
             try {
                 JSONObject obj = new JSONObject();
                 obj.put("type", LOAD_ERROR_EVENT);
                 obj.put("url", failingUrl);
                 obj.put("code", errorCode);
                 obj.put("message", description);
-
+                LOG.e(LOG_TAG, "Error event: "+failingUrl+" - "+description);
                 sendUpdate(obj, true, PluginResult.Status.ERROR);
             } catch (JSONException ex) {
                 LOG.d(LOG_TAG, "Should never happen");
             }
+
+            super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
         /**
