@@ -283,7 +283,9 @@ public class InAppBrowser extends CordovaPlugin {
             this.cordova.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    dialog.show();
+                    if (dialog != null) {
+                        dialog.show();
+                    }
                 }
             });
             PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
@@ -463,7 +465,11 @@ public class InAppBrowser extends CordovaPlugin {
                     // NB: wait for about:blank before dismissing
                     public void onPageFinished(WebView view, String url) {
                         if (dialog != null) {
-                            dialog.dismiss();
+                            try {
+                                dialog.dismiss();
+                            } catch (java.lang.IllegalArgumentException e){
+                                LOG.e(LOG_TAG, "IllegalArgumentException when trying to dismiss dialog: "+e.toString());
+                            }
                             dialog = null;
                         }
                     }
