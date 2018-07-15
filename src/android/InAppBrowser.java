@@ -466,14 +466,6 @@ public class InAppBrowser extends CordovaPlugin {
                             dialog.dismiss();
                             dialog = null;
                         }
-
-                        try {
-                            JSONObject obj = new JSONObject();
-                            obj.put("type", EXIT_EVENT);
-                            sendUpdate(obj, false);
-                        } catch (JSONException ex) {
-                            LOG.d(LOG_TAG, "Should never happen");
-                        }
                     }
                 });
                 // NB: From SDK 19: "If you call methods on WebView from any thread
