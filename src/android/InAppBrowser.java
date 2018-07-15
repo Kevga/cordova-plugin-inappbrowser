@@ -465,20 +465,20 @@ public class InAppBrowser extends CordovaPlugin {
                             dialog.dismiss();
                             dialog = null;
                         }
+
+                        try {
+                            JSONObject obj = new JSONObject();
+                            obj.put("type", EXIT_EVENT);
+                            sendUpdate(obj, false);
+                        } catch (JSONException ex) {
+                            LOG.d(LOG_TAG, "Should never happen");
+                        }
                     }
                 });
                 // NB: From SDK 19: "If you call methods on WebView from any thread
                 // other than your app's UI thread, it can cause unexpected results."
                 // http://developer.android.com/guide/webapps/migrating.html#Threads
                 childView.loadUrl("about:blank");
-
-                try {
-                    JSONObject obj = new JSONObject();
-                    obj.put("type", EXIT_EVENT);
-                    sendUpdate(obj, false);
-                } catch (JSONException ex) {
-                    LOG.d(LOG_TAG, "Should never happen");
-                }
             }
         });
     }
@@ -933,7 +933,7 @@ public class InAppBrowser extends CordovaPlugin {
 
                 // Add our toolbar to our main view/layout
                 main.addView(toolbar);
-                          
+
                 // Add our webview to our main view/layout
                 RelativeLayout webViewLayout = new RelativeLayout(cordova.getActivity());
                 webViewLayout.addView(inAppWebView);
