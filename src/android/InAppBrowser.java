@@ -812,19 +812,6 @@ public class InAppBrowser extends CordovaPlugin {
                 dialog.setCancelable(true);
                 dialog.setInAppBroswer(getInAppBrowser());
 
-                dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        try {
-                            JSONObject obj = new JSONObject();
-                            obj.put("type", EXIT_EVENT);
-                            sendUpdate(obj, false);
-                        } catch (JSONException ex) {
-                            LOG.d(LOG_TAG, "Should never happen");
-                        }
-                    }
-                });
-
                 // Main container layout
                 LinearLayout main = new LinearLayout(cordova.getActivity());
                 main.setOrientation(LinearLayout.VERTICAL);
