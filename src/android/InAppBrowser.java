@@ -945,6 +945,7 @@ public class InAppBrowser extends CordovaPlugin {
                 inAppWebView = new WebView(cordova.getActivity());
                 inAppWebView.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
                 inAppWebView.setId(Integer.valueOf(6));
+                inAppWebView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
                 // File Chooser Implemented ChromeClient
                 inAppWebView.setWebChromeClient(new InAppChromeClient(thatWebView) {
                     // For Android 5.0+
@@ -1247,7 +1248,7 @@ public class InAppBrowser extends CordovaPlugin {
             }
 
             // On first URL change, initiate JS callback. Only after the beforeload event, continue.
-            if (useBeforeload && this.waitForBeforeload) {
+            if (useBeforeload) {
                 if(sendBeforeLoad(url, method)) {
                     return true;
                 }
